@@ -23,7 +23,7 @@ const CartItem = (props) => {
                         onClick={() => { onDecreaseQty(product) }}
                         src="https://cdn-icons-png.flaticon.com/512/992/992683.png" />
                     <img className="action-icons"
-                        onClick={() => { onDeleteProduct(product.id) }}
+                        onClick={() => { onDeleteProduct(product) }}
                         src="https://cdn-icons-png.flaticon.com/512/1214/1214428.png" />
 
                 </div>

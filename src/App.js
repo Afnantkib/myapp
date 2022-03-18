@@ -1,72 +1,155 @@
 import React from 'react';
 import Cart from './Cart';
 import Navbar from './Navbar';
+import firebase from 'firebase/compat/app';
+// import { Firestore as firestore, getFirestore } from 'firebase/compat/firestore';
 class App extends React.Component {
 constructor(){
 super();
 this.state = {
 
-  products: [
-      {
-          price: 999,
-          title: 'Phone',
-          qty: 1,
-          img: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8aXBob25lfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=500&q=60',
-          id: 1
-      },
-      {
-          price: 652,
-          title: 'Laptop',
-          qty: 3,
-          img: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8bGFwdG9wfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=500&q=60',
-          id: 2
-      },
-      {
-          price: 999,
-          title: 'Watch',
-          qty: 1,
-          img: 'https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8d2F0Y2h8ZW58MHx8MHx8&auto=format&fit=crop&w=500&q=60',
-          id: 3
-      }
+  products: [],
+  loading:true
+
+}
+
+}
+componentDidMount(){
+  // Just reading from firebase
+// firebase
+// .firestore()
+// .collection("products")
+// .get()
+// .then((snapshot)=>{
+// const products=snapshot.docs.map((doc)=>{
+//   const data=doc.data();
+//   data['id']=doc.id;
+//   return doc.data();
+// })
+
+// this.setState({
+//   products,
+//   loading:false
+// })
+
+
+// })
+
+
+//********* for realtime updation/ adding a listener */ 
+
+firebase
+.firestore()
+.collection("products")
+.onSnapshot((snapshot)=>{
+const products=snapshot.docs.map((doc)=>{
+    const data=doc.data();
+  data['id']=doc.id;
+  return data;
+  
+})
+
+this.setState({
+  products,
+loading:false
+})
+
+
+
+})
 
 
 
 
-  ]
 
 }
 
 
 
 
-}
+
+
+
+
+
 handleIncreaseQty=(product)=>{
-  const {products}=this.state;
-  const idx=products.indexOf(product);
-  products[idx].qty+=1;
-  this.setState({
-    products
-  })
+  //*********** This is cllient sided logic */
+
+  // const {products}=this.state;
+  // const idx=products.indexOf(product);
+  // products[idx].qty+=1;
+  // this.setState({
+  //   products
+  // })     
+
+// // //*********************** This is db sided logic */
+
+const docRef=firebase.firestore().collection("products").doc(product.id);
+docRef.update({
+  qty:product.qty+1
+})
+.then(()=>{
+    console.log('Updated successfully')
+})
+.catch((e)=>{
+  console.log(e);
+})
+
+
+
+
+
+
   
   }
+
+
+
+
   handleDecreaseQty=(product)=>{
-  const {products}=this.state;
+     const {products}=this.state;
   const idx=products.indexOf(product);
   if(products[idx].qty===0){
     return;
   }
-  products[idx].qty-=1;
-  this.setState({
-    products
-  })
-  
-  }
-  handleDeleteProduct=(id)=>{
-const {products}=this.state;
-const items=products.filter((product)=>product.id!==id);
-this.setState({
-  products:items
+  // products[idx].qty-=1;
+  // this.setState({
+  //   products
+  // })
+  const docRef=firebase.firestore().collection("products").doc(product.id);
+  docRef.update({
+  qty:product.qty-1
+
+
+
+  }).then(()=>{
+    console.log('Updated successfully')
 })
+.catch((e)=>{
+  console.log(e);
+})
+
+
+
+
+
+
+  }
+  handleDeleteProduct=(product)=>{
+// const {products}=this.state;
+// const items=products.filter((product)=>product.id!==id);
+// this.setState({
+//   products:items
+// })
+
+const docRef=firebase.firestore().collection("products").doc(product.id);
+docRef.delete().then(()=>{
+  console.log("Deleted")
+})
+.catch((e)=>{
+  console.log(e);
+})
+
 
 
 
@@ -90,15 +173,31 @@ total+= product.qty*product.price;
 
   return total;
 }
-
+addProduct=()=>{
+  firebase
+  .firestore()
+  .collection("products")
+  .add({
+    img:'',
+    title:'Google',
+    price:234,
+    qty:3
+  }).then((docRef)=>{
+console.log("Product has been added ",docRef )
+  }).catch((e)=>{
+    console.log(e);
+  })
+}
 
 render(){
-const {products}=this.state;
+const {products,loading}=this.state;
+
   return (
   
     <div className="App">
         <Navbar count={this.getCartCount()}/>
-      <h1>Cart</h1>
+        <button onClick={this.addProduct} style={{padding:15,borderRadius:5}}>Add Item</button>
+       {loading && <h1>Loading ...</h1>}
       <Cart
        products={products}
         handleIncreaseQty={this.handleIncreaseQty}
